@@ -5,7 +5,6 @@ from infra.job_store import get_output
 
 router = APIRouter()
 
-
 @router.websocket("/ws/{job_id}")
 async def websocket_endpoint(websocket: WebSocket, job_id: str):
     """
@@ -23,7 +22,7 @@ async def websocket_endpoint(websocket: WebSocket, job_id: str):
 
     # If the job already finished before the client connected, send result immediately
     cached = await get_output(job_id)
-    if cached:
+    if cached and cached.get("status") == "done":
         await websocket.send_text(json.dumps({"event": "done", "message": "Ready!", **cached}))
         await websocket.close()
         return

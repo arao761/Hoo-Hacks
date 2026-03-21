@@ -1,6 +1,10 @@
 # filepath: /Users/pranavvaddepalli/Desktop/HooHacks/backend/main.py
 # python
+import sys
+import os
 import uuid
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,9 +17,13 @@ from models import (
     OutputStatus,
 )
 from redis_client import enqueue_job, get_output_metadata, save_output_metadata
+from infra import ws_router, status_router
 
 settings = get_settings()
 app = FastAPI(title="LearnLens Backend (Person 2)")
+
+app.include_router(ws_router)
+app.include_router(status_router)
 
 
 # CORS so Person 1 can hit this from Next.js (adjust origins in prod)
