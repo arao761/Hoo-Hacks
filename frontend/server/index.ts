@@ -7,9 +7,9 @@ export function createServer() {
   const app = express();
 
   // Middleware
+  // NOTE: Do NOT add express.json() here — it would consume POST bodies
+  // before Vite's proxy can forward them to the FastAPI backend.
   app.use(cors());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
 
   // Example API routes
   app.get("/api/ping", (_req, res) => {

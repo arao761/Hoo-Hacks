@@ -1,4 +1,6 @@
 import json
+import redis.asyncio as aioredis
+from infra.config import REDIS_URL
 from infra.redis_client import get_redis
 
 
@@ -20,9 +22,14 @@ async def publish_progress(job_id: str, event: str, message: str, data: dict = {
     Example:
         await publish_progress(job_id, "done", "Your song is ready!", {"cdn_url": "...", "lyrics": "..."})
     """
-    redis = await get_redis()
-    payload = json.dumps({"event": event, "message": message, **data})
-    await redis.publish(_channel(job_id), payload)
+    # Fresh connection each call so this works correctly when called via
+    # asyncio.run() from the synchronous worker (each call has its own event loop)
+    client = aioredis.from_url(REDIS_URL, decode_responses=True)
+    try:
+        payload = json.dumps({"event": event, "message": message, **data})
+        await client.publish(_channel(job_id), payload)
+    finally:
+        await client.aclose()
 
 
 async def subscribe_to_job(job_id: str):

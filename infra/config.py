@@ -13,6 +13,6 @@ S3_REGION        = os.getenv("AWS_REGION", "us-east-1")
 S3_BUCKET_NAME   = os.getenv("S3_BUCKET_NAME", "learnlens-media")
 
 # Job queue / cache
-QUEUE_KEY  = "queue:jobs"
+QUEUE_KEY  = "jobs:queue"  # must match backend/config.py redis_queue_key
 JOB_TTL    = 60 * 60 * 24  # 24 hours in seconds
 CACHE_TTL  = 60 * 60 * 24  # 24 hours in seconds

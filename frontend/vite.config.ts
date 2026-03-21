@@ -12,6 +12,13 @@ export default defineConfig(({ mode }) => ({
       allow: ["./", "./client", "./shared", "./public"],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**"],
     },
+    proxy: {
+      "/generate": { target: "http://localhost:8000", changeOrigin: true },
+      "/output":   { target: "http://localhost:8000", changeOrigin: true },
+      "/status":   { target: "http://localhost:8000", changeOrigin: true },
+      "/health":   { target: "http://localhost:8000", changeOrigin: true },
+      "/ws":       { target: "ws://localhost:8000",   changeOrigin: true, ws: true },
+    },
   },
   build: {
     outDir: "dist/spa",

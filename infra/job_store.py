@@ -4,7 +4,7 @@ from infra.config import JOB_TTL
 
 
 def _job_key(job_id: str) -> str:
-    return f"job_output:{job_id}"
+    return f"output:{job_id}"  # must match backend/config.py redis_output_prefix
 
 
 async def store_output(job_id: str, output: dict):
