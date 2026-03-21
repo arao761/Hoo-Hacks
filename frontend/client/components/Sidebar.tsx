@@ -1,47 +1,65 @@
 import { useState } from "react";
 import { Menu, X, Plus, Search, Folder, Zap, MessageCircle, Trash2 } from "lucide-react";
 
-interface ChatItem {
+export interface ChatItem {
   id: string;
   title: string;
   timestamp: string;
 }
 
-const MOCK_CHATS: ChatItem[] = [
-  {
-    id: "1",
-    title: "Spanish Vocabulary Lesson",
-    timestamp: "Today",
-  },
-  {
-    id: "2",
-    title: "Ancient Egypt Documentary",
-    timestamp: "Yesterday",
-  },
-  {
-    id: "3",
-    title: "Python Programming Basics",
-    timestamp: "2 days ago",
-  },
-  {
-    id: "4",
-    title: "Renaissance Art History",
-    timestamp: "1 week ago",
-  },
-  {
-    id: "5",
-    title: "Marine Biology Deep Dive",
-    timestamp: "2 weeks ago",
-  },
-];
+interface SidebarProps {
+  isMobile?: boolean;
+  onNewChat: () => void;
+}
 
-export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
+export const Sidebar = ({ isMobile = false, onNewChat }: SidebarProps) => {
   const [isOpen, setIsOpen] = useState(!isMobile);
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [chats, setChats] = useState<ChatItem[]>([
+    {
+      id: "1",
+      title: "Spanish Vocabulary Lesson",
+      timestamp: "Today",
+    },
+    {
+      id: "2",
+      title: "Ancient Egypt Documentary",
+      timestamp: "Yesterday",
+    },
+    {
+      id: "3",
+      title: "Python Programming Basics",
+      timestamp: "2 days ago",
+    },
+    {
+      id: "4",
+      title: "Renaissance Art History",
+      timestamp: "1 week ago",
+    },
+    {
+      id: "5",
+      title: "Marine Biology Deep Dive",
+      timestamp: "2 weeks ago",
+    },
+  ]);
 
   const handleNewChat = () => {
-    setSelectedChat(null);
-    // Clear the prompt input on the page
+    onNewChat();
+  };
+
+  const handleSearchClick = () => {
+    setIsSearching(true);
+  };
+
+  const handleSearchBlur = () => {
+    if (!searchQuery.trim()) {
+      setIsSearching(false);
+    }
+  };
+
+  const handleDeleteChat = (chatId: string) => {
+    setChats(chats.filter(chat => chat.id !== chatId));
   };
 
   return (
@@ -90,14 +108,29 @@ export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
               <span>New Chat</span>
             </button>
 
-            {/* Search button */}
-            <button
-              className="w-full flex items-center gap-3 px-4 py-3 border-2 border-hooslearn-blue 
-                         text-hooslearn-blue rounded-lg hover:bg-blue-50 transition-all duration-200 font-medium"
-            >
-              <Search size={20} />
-              <span>Search Chats</span>
-            </button>
+            {/* Search button/input */}
+            {!isSearching ? (
+              <button
+                onClick={handleSearchClick}
+                className="w-full flex items-center gap-3 px-4 py-3 border-2 border-hooslearn-blue 
+                           text-hooslearn-blue rounded-lg hover:bg-blue-50 transition-all duration-200 font-medium cursor-text"
+              >
+                <Search size={20} />
+                <span>Search Chats</span>
+              </button>
+            ) : (
+              <input
+                type="text"
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onBlur={handleSearchBlur}
+                placeholder="Search chats..."
+                className="w-full px-4 py-3 border-2 border-hooslearn-blue rounded-lg 
+                           focus:outline-none focus:ring-2 focus:ring-hooslearn-blue focus:ring-offset-2
+                           placeholder-gray-400 font-medium"
+              />
+            )}
           </div>
 
           {/* Menu items section */}
@@ -125,16 +158,11 @@ export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
               Recent Chats
             </h3>
             <div className="space-y-2">
-              {MOCK_CHATS.map((chat) => (
+              {chats.map((chat) => (
                 <div
                   key={chat.id}
                   className={`group relative p-3 rounded-lg transition-all duration-200 cursor-pointer
-                    ${
-                      selectedChat === chat.id
-                        ? "bg-hooslearn-orange text-white"
-                        : "hover:bg-orange-50 text-hooslearn-blue"
-                    }`}
-                  onClick={() => setSelectedChat(chat.id)}
+                    hover:bg-orange-50 text-hooslearn-blue`}
                 >
                   <div className="flex items-start gap-2 min-w-0">
                     <MessageCircle
@@ -145,13 +173,7 @@ export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
                       <p className="text-sm font-medium truncate">
                         {chat.title}
                       </p>
-                      <p
-                        className={`text-xs ${
-                          selectedChat === chat.id
-                            ? "text-orange-100"
-                            : "text-gray-500"
-                        }`}
-                      >
+                      <p className="text-xs text-gray-500">
                         {chat.timestamp}
                       </p>
                     </div>
@@ -161,7 +183,7 @@ export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Handle delete
+                      handleDeleteChat(chat.id);
                     }}
                     className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 
                                hover:bg-red-500 hover:text-white rounded"

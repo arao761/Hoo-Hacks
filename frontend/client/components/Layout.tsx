@@ -1,13 +1,25 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, ReactNode } from "react";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 
 interface LayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
+
+export interface ChatItem {
+  id: string;
+  title: string;
+  timestamp: string;
+}
+
+export const ChatContext = React.createContext<{
+  newChatKey: number;
+  onNewChat: () => void;
+} | null>(null);
 
 export const Layout = ({ children }: LayoutProps) => {
   const [isMobile, setIsMobile] = useState(false);
+  const [newChatKey, setNewChatKey] = useState(0);
 
   useEffect(() => {
     const handleResize = () => {
@@ -19,21 +31,27 @@ export const Layout = ({ children }: LayoutProps) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const handleNewChat = () => {
+    setNewChatKey((prev) => prev + 1);
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      {/* Header */}
-      <Header />
+    <ChatContext.Provider value={{ newChatKey, onNewChat: handleNewChat }}>
+      <div className="flex flex-col h-screen bg-gray-50">
+        {/* Header */}
+        <Header />
 
-      {/* Main content area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <Sidebar isMobile={isMobile} />
+        {/* Main content area */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar */}
+          <Sidebar isMobile={isMobile} onNewChat={handleNewChat} />
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
+          {/* Page content */}
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </ChatContext.Provider>
   );
 };
