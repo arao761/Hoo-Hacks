@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { OwlMascot } from "@/components/OwlMascot";
 import { Music, Image, Video, Sparkles } from "lucide-react";
 import { ChatContext } from "@/components/Layout";
@@ -7,6 +8,8 @@ export default function Index() {
   const [prompt, setPrompt] = useState("");
   const [selectedType, setSelectedType] = useState<"song" | "image" | "video" | null>(null);
   const [showOptions, setShowOptions] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const chatContext = useContext(ChatContext);
   const prevNewChatKeyRef = useRef(chatContext?.newChatKey || 0);
 
@@ -28,6 +31,23 @@ export default function Index() {
 
   const handleTypeSelect = (type: "song" | "image" | "video") => {
     setSelectedType(type);
+  };
+
+  const handleGenerateMedia = async () => {
+    if (!prompt.trim() || !selectedType) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: prompt, output_type: selectedType }),
+      });
+      const { job_id } = await res.json();
+      navigate(`/result/${job_id}?type=${selectedType}&topic=${encodeURIComponent(prompt)}`);
+    } catch (err) {
+      console.error("Failed to start generation", err);
+      setLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -163,15 +183,15 @@ export default function Index() {
               <div className="mt-6">
                 <button
                   onClick={handleGenerateMedia}
-                  disabled={!selectedType}
-                  className={`w-full py-3 sm:py-4 font-wild-west text-lg sm:text-xl rounded-full transition-all duration-200 
+                  disabled={!selectedType || loading}
+                  className={`w-full py-3 sm:py-4 font-wild-west text-lg sm:text-xl rounded-full transition-all duration-200
                              shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100 ${
-                    selectedType
+                    selectedType && !loading
                       ? "bg-hooslearn-orange hover:bg-hooslearn-orange-dark text-white"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 >
-                  🎨 Generate Media 🎨
+                  {loading ? "Saddling up..." : "🎨 Generate Media 🎨"}
                 </button>
               </div>
             </div>
