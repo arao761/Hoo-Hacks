@@ -8,6 +8,9 @@ import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+
 from models import OutputMetadata, OutputStatus, OutputType
 from redis_client import dequeue_job, save_output_metadata
 from gemini_client import expand_topic_with_gemini

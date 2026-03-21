@@ -38,7 +38,7 @@ def dequeue_job(block: bool = True, timeout: int = 5) -> Optional[dict]:
 def save_output_metadata(metadata: OutputMetadata) -> None:
     """Store output metadata with TTL."""
     key = f"{settings.redis_output_prefix}{metadata.job_id}"
-    redis_client.setex(key, settings.job_ttl_seconds, metadata.json())
+    redis_client.setex(key, settings.job_ttl_seconds, metadata.model_dump_json())
 
 
 def get_output_metadata(job_id: str) -> Optional[OutputMetadata]:
@@ -47,4 +47,4 @@ def get_output_metadata(job_id: str) -> Optional[OutputMetadata]:
     raw = redis_client.get(key)
     if not raw:
         return None
-    return OutputMetadata.parse_raw(raw)
+    return OutputMetadata.model_validate_json(raw)
