@@ -57,6 +57,13 @@ const TRANSLATIONS: Record<Language, TranslationMap> = {
     version: "HoosLearn v1.0",
     openInNewTab: "Open in new tab ↗",
     noAudioSupport: "Your browser does not support audio playback.",
+    noVideoSupport: "Your browser does not support video playback.",
+    steps: {
+      prompted: "Prompted",
+      generating: "Generating",
+      uploading: "Uploading",
+      done: "Done",
+    },
     subjects: {
       math: "Math",
       science: "Science",
@@ -199,6 +206,13 @@ const TRANSLATIONS: Record<Language, TranslationMap> = {
     version: "HoosLearn v1.0",
     openInNewTab: "Abrir en nueva pestaña ↗",
     noAudioSupport: "Tu navegador no es compatible con la reproducción de audio.",
+    noVideoSupport: "Tu navegador no es compatible con la reproducción de video.",
+    steps: {
+      prompted: "Procesando",
+      generating: "Generando",
+      uploading: "Subiendo",
+      done: "Listo",
+    },
     subjects: {
       math: "Matemáticas",
       science: "Ciencias",
@@ -341,6 +355,13 @@ const TRANSLATIONS: Record<Language, TranslationMap> = {
     version: "HoosLearn v1.0",
     openInNewTab: "在新标签页打开 ↗",
     noAudioSupport: "您的浏览器不支持音频播放。",
+    noVideoSupport: "您的浏览器不支持视频播放。",
+    steps: {
+      prompted: "处理中",
+      generating: "生成中",
+      uploading: "上传中",
+      done: "完成",
+    },
     subjects: {
       math: "数学",
       science: "科学",
@@ -483,6 +504,13 @@ const TRANSLATIONS: Record<Language, TranslationMap> = {
     version: "HoosLearn v1.0",
     openInNewTab: "नई टैब में खोलें ↗",
     noAudioSupport: "आपका ब्राउज़र ऑडियो प्लेबैक का समर्थन नहीं करता है।",
+    noVideoSupport: "आपका ब्राउज़र वीडियो प्लेबैक का समर्थन नहीं करता है।",
+    steps: {
+      prompted: "प्रसंस्करण",
+      generating: "निर्माण",
+      uploading: "अपलोड",
+      done: "तैयार",
+    },
     subjects: {
       math: "गणित",
       science: "विज्ञान",
@@ -625,6 +653,13 @@ const TRANSLATIONS: Record<Language, TranslationMap> = {
     version: "HoosLearn v1.0",
     openInNewTab: "In neuem Tab öffnen ↗",
     noAudioSupport: "Ihr Browser unterstützt die Audiowiedergabe nicht.",
+    noVideoSupport: "Ihr Browser unterstützt die Videowiedergabe nicht.",
+    steps: {
+      prompted: "Prompt erstellt",
+      generating: "Wird generiert",
+      uploading: "Wird hochgeladen",
+      done: "Fertig",
+    },
     subjects: {
       math: "Mathematik",
       science: "Wissenschaft",
@@ -767,6 +802,13 @@ const TRANSLATIONS: Record<Language, TranslationMap> = {
     version: "HoosLearn v1.0",
     openInNewTab: "Apri in una nuova scheda ↗",
     noAudioSupport: "Il tuo browser non supporta la riproduzione audio.",
+    noVideoSupport: "Il tuo browser non supporta la riproduzione video.",
+    steps: {
+      prompted: "Prompt creato",
+      generating: "Generazione in corso",
+      uploading: "Caricamento in corso",
+      done: "Completato",
+    },
     subjects: {
       math: "Matematica",
       science: "Scienze",

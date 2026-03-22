@@ -109,7 +109,7 @@ export default function Result() {
           <h1 className="font-wild-west text-3xl sm:text-4xl text-hooslearn-blue mb-1">
             {typeIcon}{topic}
           </h1>
-          <p className="text-hooslearn-blue opacity-70 text-sm capitalize">{outputType} {t("generation")}</p>
+          <p className="text-hooslearn-blue opacity-70 text-sm capitalize">{t(outputType)} {t("generation")}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border-2 border-hooslearn-orange">
@@ -130,7 +130,7 @@ export default function Result() {
                         {isDoneStep ? "✓" : i + 1}
                       </div>
                       <span className={`text-xs capitalize hidden sm:block ${isDoneStep ? "text-hooslearn-orange font-semibold" : "text-gray-400"}`}>
-                        {step}
+                        {t(`steps.${step}`)}
                       </span>
                     </div>
                   );
@@ -170,7 +170,7 @@ export default function Result() {
 
               {outputType === "video" && (
                 <video controls playsInline className="w-full rounded-xl shadow-md mb-4" src={cdnUrl}>
-                  Your browser does not support video playback.
+                  {t("noVideoSupport")}
                 </video>
               )}
 

@@ -16,7 +16,6 @@ export default function Index() {
   ];
   const [prompt, setPrompt] = useState("");
   const [selectedType, setSelectedType] = useState<"song" | "video" | null>(null);
-  const [showOptions, setShowOptions] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -35,7 +34,6 @@ export default function Index() {
         prefilledPrompt = `Teach me about ${subtopic} in ${concept}`;
       }
       setPrompt(prefilledPrompt);
-      setShowOptions(true);
     }
   }, [searchParams]);
 
@@ -44,16 +42,9 @@ export default function Index() {
       // New chat triggered, clear the form
       setPrompt("");
       setSelectedType(null);
-      setShowOptions(false);
       prevNewChatKeyRef.current = chatContext.newChatKey;
     }
   }, [chatContext?.newChatKey]);
-
-  const handleSubmit = () => {
-    if (prompt.trim()) {
-      setShowOptions(true);
-    }
-  };
 
   const handleTypeSelect = (type: "song" | "video") => {
     setSelectedType(type);
@@ -86,11 +77,9 @@ export default function Index() {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault(); // Prevent default form submission behavior
-      if (selectedType) {
-        handleGenerateMedia();
-      }
+    if (e.key === 'Enter' && prompt.trim() && selectedType) {
+      e.preventDefault();
+      handleGenerateMedia();
     }
   };
 
@@ -136,9 +125,9 @@ export default function Index() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyPress={handleKeyPress}
-                  placeholder={t("placeholder")}
-                className="w-full px-5 py-3 sm:py-4 text-sm sm:text-base border-2 border-hooslearn-orange rounded-full 
-                           focus:outline-none focus:ring-2 focus:ring-hooslearn-orange focus:ring-offset-2 
+                placeholder={t("placeholder")}
+                className="w-full px-5 py-3 sm:py-4 text-sm sm:text-base border-2 border-hooslearn-orange rounded-full
+                           focus:outline-none focus:ring-2 focus:ring-hooslearn-orange focus:ring-offset-2
                            transition-all duration-200 placeholder-gray-400 font-medium"
               />
               <Sparkles
@@ -148,73 +137,55 @@ export default function Index() {
             </div>
           </div>
 
-          {/* Submit button */}
+          {/* Content type selection */}
           <div className="mb-6">
-            <button
-              onClick={handleSubmit}
-              disabled={!prompt.trim()}
-              className="w-full py-3 sm:py-4 bg-hooslearn-orange hover:bg-hooslearn-orange-dark 
-                         disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-wild-west 
-                         text-lg sm:text-xl rounded-full transition-all duration-200 
-                         shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100"
-            >
-              {t("start")}
-            </button>
+            <p className="text-hooslearn-blue font-wild-west text-lg sm:text-xl mb-4 text-center">
+              {t("style")}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                onClick={() => handleTypeSelect("song")}
+                className={`p-6 sm:p-8 rounded-xl transition-all duration-200 flex flex-col items-center justify-center gap-3
+                           border-2 font-medium text-sm sm:text-base ${
+                  selectedType === "song"
+                    ? "bg-hooslearn-orange border-hooslearn-orange text-white shadow-lg scale-105"
+                    : "bg-white border-hooslearn-orange text-hooslearn-blue hover:bg-orange-50"
+                }`}
+              >
+                <Music size={32} />
+                <span className="font-wild-west text-lg">{t("song")}</span>
+              </button>
+
+              <button
+                onClick={() => handleTypeSelect("video")}
+                className={`p-6 sm:p-8 rounded-xl transition-all duration-200 flex flex-col items-center justify-center gap-3
+                           border-2 font-medium text-sm sm:text-base ${
+                  selectedType === "video"
+                    ? "bg-hooslearn-orange border-hooslearn-orange text-white shadow-lg scale-105"
+                    : "bg-white border-hooslearn-orange text-hooslearn-blue hover:bg-orange-50"
+                }`}
+              >
+                <Video size={32} />
+                <span className="font-wild-west text-lg">{t("video")}</span>
+              </button>
+            </div>
           </div>
 
-          {/* Content type selection - shown after clicking Let's Learn */}
-          {showOptions && (
-            <div className="mb-6">
-              <p className="text-hooslearn-blue font-wild-west text-lg sm:text-xl mb-4 text-center">
-                {t("style")}
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Song option */}
-                <button
-                  onClick={() => handleTypeSelect("song")}
-                  className={`p-6 sm:p-8 rounded-xl transition-all duration-200 flex flex-col items-center justify-center gap-3
-                             border-2 font-medium text-sm sm:text-base ${
-                    selectedType === "song"
-                      ? "bg-hooslearn-orange border-hooslearn-orange text-white shadow-lg scale-105"
-                      : "bg-white border-hooslearn-orange text-hooslearn-blue hover:bg-orange-50"
-                  }`}
-                >
-                  <Music size={32} />
-<span className="font-wild-west text-lg">{t("song")}</span>
-                </button>
-
-                {/* Video option */}
-                <button
-                  onClick={() => handleTypeSelect("video")}
-                  className={`p-6 sm:p-8 rounded-xl transition-all duration-200 flex flex-col items-center justify-center gap-3
-                             border-2 font-medium text-sm sm:text-base ${
-                    selectedType === "video"
-                      ? "bg-hooslearn-orange border-hooslearn-orange text-white shadow-lg scale-105"
-                      : "bg-white border-hooslearn-orange text-hooslearn-blue hover:bg-orange-50"
-                  }`}
-                >
-                  <Video size={32} />
-                  <span className="font-wild-west text-lg">{t("video")}</span>
-                </button>
-              </div>
-
-              {/* Generate Media button */}
-              <div className="mt-6">
-                <button
-                  onClick={handleGenerateMedia}
-                  disabled={!selectedType || loading}
-                  className={`w-full py-3 sm:py-4 font-wild-west text-lg sm:text-xl rounded-full transition-all duration-200
-                             shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100 ${
-                    selectedType && !loading
-                      ? "bg-hooslearn-orange hover:bg-hooslearn-orange-dark text-white"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
-                >
-                  {loading ? t("loading") : t("generate")}
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Single Let's Learn button */}
+          <div className="mb-2">
+            <button
+              onClick={handleGenerateMedia}
+              disabled={!prompt.trim() || !selectedType || loading}
+              className={`w-full py-3 sm:py-4 font-wild-west text-lg sm:text-xl rounded-full transition-all duration-200
+                         shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100 ${
+                prompt.trim() && selectedType && !loading
+                  ? "bg-hooslearn-orange hover:bg-hooslearn-orange-dark text-white"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              {loading ? t("loading") : t("start")}
+            </button>
+          </div>
         </div>
 
         {/* Browse by Subject */}
