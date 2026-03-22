@@ -32,3 +32,25 @@ def emit_music_progress(
     if callback is None:
         return
     callback(phase, payload)
+
+
+VideoProgressPhase = Literal[
+    "submitted",
+    "generating",
+    "downloading",
+    "merging",
+    "uploading",
+    "done",
+]
+
+VideoProgressCallback = Callable[[VideoProgressPhase, dict[str, Any]], None]
+
+
+def emit_video_progress(
+    callback: Optional[VideoProgressCallback],
+    phase: VideoProgressPhase,
+    **payload: Any,
+) -> None:
+    if callback is None:
+        return
+    callback(phase, payload)

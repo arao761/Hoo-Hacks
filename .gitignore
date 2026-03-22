@@ -6,5 +6,8 @@ __pycache__/
 # Local Lyria / smoke outputs (large WAVs)
 Ai Integrations/_*.wav
 Ai Integrations/_*.mp3
+Ai Integrations/_*.mp4
+# Full lesson / smoke MP4 outputs (large binaries)
+Ai Integrations/*.mp4
 Ai Integrations/out/
 Ai Integrations/learnlens_smoke_output*.png

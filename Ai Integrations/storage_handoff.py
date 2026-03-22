@@ -24,6 +24,15 @@ class StoredAudioRef:
     content_type: str
 
 
+@dataclass(frozen=True)
+class StoredVideoRef:
+    """Return value after uploading video (e.g. Runway Gen-4 MP4) to object storage + CDN."""
+
+    url: str
+    object_key: str
+    content_type: str
+
+
 @runtime_checkable
 class ImageStorageSink(Protocol):
     """Implement on your storage helper (e.g. upload_media) and pass into the image pipeline."""
@@ -51,4 +60,19 @@ class AudioStorageSink(Protocol):
         basename_hint: str = "learnlens",
     ) -> StoredAudioRef:
         """Upload audio bytes; return CDN URL and object key."""
+        ...
+
+
+@runtime_checkable
+class VideoStorageSink(Protocol):
+    """Implement for Runway (or other) video bytes — can reuse the same upload helper as images."""
+
+    def store_video(
+        self,
+        *,
+        data: bytes,
+        content_type: str,
+        basename_hint: str = "learnlens",
+    ) -> StoredVideoRef:
+        """Upload video bytes; return CDN URL and object key."""
         ...
