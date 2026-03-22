@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { OwlMascot } from "@/components/OwlMascot";
 import { Music, Video, ArrowLeft, Loader2 } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 type OutputType = "song" | "video";
 
@@ -20,6 +21,7 @@ export default function Result() {
 
   const topic = searchParams.get("topic") ?? "";
   const outputType = (searchParams.get("type") ?? "song") as OutputType;
+  const { t } = useI18n();
 
   const [events, setEvents] = useState<ProgressEvent[]>([]);
   const [cdnUrl, setCdnUrl] = useState<string | null>(null);
@@ -96,7 +98,7 @@ export default function Result() {
           onClick={() => navigate("/")}
           className="flex items-center gap-2 text-hooslearn-blue font-medium mb-6 hover:underline"
         >
-          <ArrowLeft size={16} /> Back
+          <ArrowLeft size={16} /> {t("back")}
         </button>
 
         {/* Header */}
@@ -107,7 +109,7 @@ export default function Result() {
           <h1 className="font-wild-west text-3xl sm:text-4xl text-hooslearn-blue mb-1">
             {typeIcon}{topic}
           </h1>
-          <p className="text-hooslearn-blue opacity-70 text-sm capitalize">{outputType} generation</p>
+          <p className="text-hooslearn-blue opacity-70 text-sm capitalize">{outputType} {t("generation")}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border-2 border-hooslearn-orange">
@@ -139,7 +141,7 @@ export default function Result() {
               <div className="flex items-center justify-center gap-2 text-hooslearn-blue">
                 <Loader2 className="animate-spin" size={18} />
                 <span className="text-sm font-medium">
-                  {events.length > 0 ? events[events.length - 1].message : "Waiting for the wrangler..."}
+                  {events.length > 0 ? events[events.length - 1].message : t("waiting")}
                 </span>
               </div>
             </div>
@@ -148,20 +150,20 @@ export default function Result() {
           {/* Error state */}
           {isError && (
             <div className="text-center py-8">
-              <p className="text-red-500 font-medium mb-4">Something went wrong: {error}</p>
-              <button onClick={() => navigate("/")} className="text-hooslearn-blue underline">Try again</button>
+              <p className="text-red-500 font-medium mb-4">{t("error")}: {error}</p>
+              <button onClick={() => navigate("/")} className="text-hooslearn-blue underline">{t("tryAgain")}</button>
             </div>
           )}
 
           {/* Result display */}
           {isDone && cdnUrl && (
             <div className="text-center">
-              <p className="font-wild-west text-hooslearn-blue text-xl mb-6">Yeehaw, it's ready! 🤠</p>
+              <p className="font-wild-west text-hooslearn-blue text-xl mb-6">{t("ready")}</p>
 
               {outputType === "song" && (
                 <div>
                   <audio controls className="w-full mb-4" src={cdnUrl}>
-                    Your browser does not support audio playback.
+                    {t("noAudioSupport")}
                   </audio>
                 </div>
               )}
@@ -178,7 +180,7 @@ export default function Result() {
                 rel="noopener noreferrer"
                 className="inline-block mt-2 text-sm text-hooslearn-blue underline"
               >
-                Open in new tab ↗
+                {t("openInNewTab")}
               </a>
             </div>
           )}

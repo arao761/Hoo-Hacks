@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 const subjectData = {
   Math: [
@@ -471,6 +472,19 @@ const subtopicsData: Record<string, Record<string, string[]>> = {
 export default function Subject() {
   const { subject } = useParams<{ subject: string }>();
   const navigate = useNavigate();
+  const { t } = useI18n();
+
+  const SUBJECT_SLUG_TO_KEY: Record<string, keyof typeof subjectData> = {
+    math: "Math",
+    science: "Science",
+    history: "History",
+    english: "English",
+    coding: "Coding",
+  };
+
+  const subjectKey = subject?.toLowerCase() || "";
+  const mappedSubjectKey = SUBJECT_SLUG_TO_KEY[subjectKey];
+  const subjectTitle = subjectKey ? t(`subjects.${subjectKey}`) : "";
   const [openDropdowns, setOpenDropdowns] = useState<Record<number, boolean>>({});
 
   const toggleDropdown = (index: number) => {
@@ -491,27 +505,42 @@ export default function Subject() {
     });
   };
 
-  const handleSubtopicClick = (concept: string, subtopic: string) => {
-    navigate(`/?subject=${subject}&concept=${encodeURIComponent(concept)}&subtopic=${encodeURIComponent(subtopic)}`);
+  const slugify = (text: string) =>
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+
+  const translateSubjectString = (text: string) => {
+    if (!subjectKey) return text;
+
+    const key = `subjectContent.${subjectKey}.${slugify(text)}`;
+    const translated = t(key);
+
+    return translated === key ? text : translated;
   };
 
-  if (!subject || !subjectData[subject as keyof typeof subjectData]) {
+  const handleSubtopicClick = (concept: string, subtopic: string) => {
+    navigate(`/?subject=${subjectKey}&concept=${encodeURIComponent(concept)}&subtopic=${encodeURIComponent(subtopic)}`);
+  };
+
+  if (!subject || !mappedSubjectKey) {
     return (
       <div className="min-h-full bg-gradient-to-br from-hooslearn-orange-light via-white to-hooslearn-blue-light py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto text-center">
-          <h1 className="font-wild-west text-4xl text-hooslearn-blue mb-4">Subject Not Found</h1>
+          <h1 className="font-wild-west text-4xl text-hooslearn-blue mb-4">{t("subjectNotFound")}</h1>
           <button
             onClick={() => navigate('/')}
             className="bg-hooslearn-orange text-white px-6 py-3 rounded-lg hover:bg-hooslearn-orange-dark transition-colors"
           >
-            Go Home
+            {t("goHome")}
           </button>
         </div>
       </div>
     );
   }
 
-  const concepts = subjectData[subject as keyof typeof subjectData];
+  const concepts = subjectData[mappedSubjectKey];
 
   return (
     <div className="min-h-full bg-gradient-to-br from-hooslearn-orange-light via-white to-hooslearn-blue-light py-8 px-4 sm:px-6 lg:px-8">
@@ -524,15 +553,15 @@ export default function Subject() {
             className="flex items-center gap-2 text-hooslearn-blue hover:text-hooslearn-orange transition-colors mb-4"
           >
             <ArrowLeft size={20} />
-            <span>Back to Home</span>
+            <span>{t("backToHome")}</span>
           </button>
 
           <div className="text-center">
             <h1 className="font-wild-west text-4xl sm:text-5xl lg:text-6xl text-hooslearn-blue mb-2">
-              {subject}
+              {subjectTitle || subject}
             </h1>
             <p className="text-hooslearn-blue text-lg font-medium">
-              Choose a concept to learn about
+              {t("chooseConcept")}
             </p>
           </div>
         </div>
@@ -542,7 +571,7 @@ export default function Subject() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
             {concepts.map((concept, index) => {
               const isOpen = openDropdowns[index] || false;
-              const subtopics = subtopicsData[subject!]?.[concept] || [];
+              const subtopics = subtopicsData[mappedSubjectKey]?.[concept] || [];
 
               return (
                 <div
@@ -560,7 +589,7 @@ export default function Subject() {
                     <div className="flex items-center gap-3">
                       <BookOpen size={20} />
                       <h3 className="font-wild-west text-lg text-left">
-                        {concept}
+                        {translateSubjectString(concept)}
                       </h3>
                     </div>
                     {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
@@ -579,7 +608,7 @@ export default function Subject() {
                                      text-hooslearn-blue hover:text-hooslearn-orange"
                           >
                             <Sparkles size={14} className="text-hooslearn-orange flex-shrink-0" />
-                            <span className="text-sm font-medium">{subtopic}</span>
+                            <span className="text-sm font-medium">{translateSubjectString(subtopic)}</span>
                           </button>
                         ))}
                       </div>
@@ -594,7 +623,7 @@ export default function Subject() {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="font-wild-west text-hooslearn-blue text-sm">
-            Click on any concept to explore specific topics! 🎓
+            {t("clickToExplore")}
           </p>
         </div>
       </div>

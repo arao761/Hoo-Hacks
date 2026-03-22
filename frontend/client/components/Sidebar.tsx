@@ -1,6 +1,7 @@
 import { useState, useContext, useMemo } from "react";
 import { Menu, X, Plus, Search, MessageCircle, Trash2 } from "lucide-react";
 import { ChatContext, ChatItem } from "./Layout";
+import { useI18n } from "@/i18n";
 
 interface SidebarProps {
   isMobile?: boolean;
@@ -12,9 +13,15 @@ export const Sidebar = ({ isMobile = false, onNewChat }: SidebarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const chatContext = useContext(ChatContext);
 
+  const { t } = useI18n();
   const chats = chatContext?.chats || [];
   const addChat = chatContext?.addChat;
   const deleteChat = chatContext?.deleteChat;
+
+  const localize = (chat: ChatItem) => ({
+    title: chat.titleKey ? t(chat.titleKey) : chat.title || "",
+    timestamp: chat.timestampKey ? t(chat.timestampKey) : chat.timestamp || "",
+  });
 
   // Filter and sort chats based on search query
   const filteredChats = useMemo(() => {
@@ -27,7 +34,8 @@ export const Sidebar = ({ isMobile = false, onNewChat }: SidebarProps) => {
     const nonMatching = [];
 
     for (const chat of chats) {
-      if (chat.title.toLowerCase().includes(query)) {
+      const localized = localize(chat);
+      if (localized.title.toLowerCase().includes(query)) {
         matching.push(chat);
       } else {
         nonMatching.push(chat);
@@ -101,7 +109,7 @@ export const Sidebar = ({ isMobile = false, onNewChat }: SidebarProps) => {
                          rounded-lg hover:bg-hooslearn-orange-dark transition-all duration-200 font-medium"
             >
               <Plus size={20} />
-              <span>New Chat</span>
+              <span>{t("newChat")}</span>
             </button>
 
             {/* Search input - always visible */}
@@ -110,7 +118,7 @@ export const Sidebar = ({ isMobile = false, onNewChat }: SidebarProps) => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search chats..."
+                placeholder={t("searchChats")}
                 className="w-full pl-10 pr-4 py-3 border-2 border-hooslearn-blue rounded-lg 
                            focus:outline-none focus:ring-2 focus:ring-hooslearn-blue focus:ring-offset-2
                            placeholder-gray-400 font-medium"
@@ -125,7 +133,9 @@ export const Sidebar = ({ isMobile = false, onNewChat }: SidebarProps) => {
           {/* Chat history section - moved up, takes more space */}
           <div className="flex-1 p-4 overflow-y-auto">
             <h3 className="text-hooslearn-blue font-wild-west text-lg mb-3">
-              {searchQuery.trim() ? `Search Results (${filteredChats.length})` : "Recent Chats"}
+              {searchQuery.trim()
+                ? `${t("searchResults")} (${filteredChats.length})`
+                : t("recentChats")}
             </h3>
             <div className="space-y-2">
               {filteredChats.map((chat, index) => (
@@ -146,10 +156,10 @@ export const Sidebar = ({ isMobile = false, onNewChat }: SidebarProps) => {
                     />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium truncate">
-                        {chat.title}
+                        {localize(chat).title}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {chat.timestamp}
+                        {localize(chat).timestamp}
                       </p>
                     </div>
                   </div>
@@ -170,7 +180,7 @@ export const Sidebar = ({ isMobile = false, onNewChat }: SidebarProps) => {
               {filteredChats.length === 0 && searchQuery.trim() && (
                 <div className="text-center py-8 text-gray-500">
                   <MessageCircle size={48} className="mx-auto mb-2 opacity-50" />
-                  <p>No chats found matching "{searchQuery}"</p>
+                  <p>{t("noChatsFound")} "{searchQuery}"</p>
                 </div>
               )}
             </div>
@@ -179,7 +189,7 @@ export const Sidebar = ({ isMobile = false, onNewChat }: SidebarProps) => {
           {/* Footer section */}
           <div className="p-4 border-t-2 border-hooslearn-orange">
             <p className="text-xs text-gray-500 text-center">
-              HoosLearn v1.0
+              {t("version")}
             </p>
           </div>
         </div>

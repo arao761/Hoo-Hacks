@@ -3,13 +3,20 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { OwlMascot } from "@/components/OwlMascot";
 import { Music, Video, Sparkles, BookOpen } from "lucide-react";
 import { ChatContext } from "@/components/Layout";
-
-const SUBJECTS = ["Math", "Science", "History", "English", "Coding"] as const;
+import { useI18n } from "@/i18n";
 
 export default function Index() {
+  const { t } = useI18n();
+  const SUBJECTS = [
+    { id: "math", name: t("subjects.math") },
+    { id: "science", name: t("subjects.science") },
+    { id: "history", name: t("subjects.history") },
+    { id: "english", name: t("subjects.english") },
+    { id: "coding", name: t("subjects.coding") },
+  ];
   const [prompt, setPrompt] = useState("");
-  const [selectedType, setSelectedType] = useState<"song" | "video" | null>(null);
-  const [showOptions, setShowOptions] = useState(true);
+  const [selectedType, setSelectedType] = useState<"song" | "image" | "video" | null>(null);
+  const [showOptions, setShowOptions] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -102,10 +109,10 @@ export default function Index() {
 
           {/* App Title */}
           <h1 className="font-wild-west text-4xl sm:text-5xl lg:text-6xl text-hooslearn-blue mb-2">
-            HoosLearn
+            {t("appName")}
           </h1>
           <p className="text-hooslearn-blue text-sm sm:text-base lg:text-lg font-medium tracking-wide">
-            Learn Anything, Your Way!
+            {t("tagline")}
           </p>
         </div>
 
@@ -114,10 +121,10 @@ export default function Index() {
           {/* Section title */}
           <div className="text-center mb-6 sm:mb-8">
             <h2 className="font-wild-west text-2xl sm:text-3xl text-hooslearn-blue mb-2">
-              What'll it be, Partner?
+              {t("what")}
             </h2>
             <p className="text-hooslearn-blue text-sm sm:text-base opacity-80">
-              Tell me what you want to learn, choose your style, and let's saddle up!
+              {t("help")}
             </p>
           </div>
 
@@ -129,7 +136,7 @@ export default function Index() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Prompt HoosLearn"
+                  placeholder={t("placeholder")}
                 className="w-full px-5 py-3 sm:py-4 text-sm sm:text-base border-2 border-hooslearn-orange rounded-full 
                            focus:outline-none focus:ring-2 focus:ring-hooslearn-orange focus:ring-offset-2 
                            transition-all duration-200 placeholder-gray-400 font-medium"
@@ -143,13 +150,23 @@ export default function Index() {
 
           {/* Submit button */}
           <div className="mb-6">
+            <button
+              onClick={handleSubmit}
+              disabled={!prompt.trim()}
+              className="w-full py-3 sm:py-4 bg-hooslearn-orange hover:bg-hooslearn-orange-dark 
+                         disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-wild-west 
+                         text-lg sm:text-xl rounded-full transition-all duration-200 
+                         shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100"
+            >
+              {t("start")}
+            </button>
           </div>
 
           {/* Content type selection - shown after clicking Let's Learn */}
           {showOptions && (
             <div className="mb-6">
               <p className="text-hooslearn-blue font-wild-west text-lg sm:text-xl mb-4 text-center">
-                How do you wanna learn?
+                {t("style")}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Song option */}
@@ -163,7 +180,7 @@ export default function Index() {
                   }`}
                 >
                   <Music size={32} />
-                  <span className="font-wild-west text-lg">Song</span>
+<span className="font-wild-west text-lg">{t("song")}</span>
                 </button>
 
                 {/* Video option */}
@@ -177,7 +194,7 @@ export default function Index() {
                   }`}
                 >
                   <Video size={32} />
-                  <span className="font-wild-west text-lg">Video</span>
+                  <span className="font-wild-west text-lg">{t("video")}</span>
                 </button>
               </div>
 
@@ -193,7 +210,7 @@ export default function Index() {
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 >
-                  {loading ? "Saddling up..." : "🤠 Let's Learn! 🤠"}
+                  {loading ? t("loading") : t("generate")}
                 </button>
               </div>
             </div>
@@ -204,19 +221,19 @@ export default function Index() {
         <div className="mt-8">
           <div className="text-center mb-4">
             <h3 className="font-wild-west text-xl text-hooslearn-blue flex items-center justify-center gap-2">
-              <BookOpen size={20} /> Browse by Subject
+              <BookOpen size={20} /> {t("browseBySubject")}
             </h3>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {SUBJECTS.map((subject) => (
               <button
-                key={subject}
-                onClick={() => navigate(`/subject/${subject}`)}
+                key={subject.id}
+                onClick={() => navigate(`/subject/${subject.id}`)}
                 className="py-3 px-4 bg-white border-2 border-hooslearn-blue text-hooslearn-blue font-wild-west
                            rounded-xl hover:bg-hooslearn-blue hover:text-white transition-all duration-200
                            shadow-sm hover:shadow-md text-sm sm:text-base"
               >
-                {subject}
+                {subject.name}
               </button>
             ))}
           </div>
@@ -225,7 +242,7 @@ export default function Index() {
         {/* Footer tagline */}
         <div className="text-center mt-8 sm:mt-12">
           <p className="font-wild-west text-hooslearn-blue text-sm sm:text-base">
-            With HoosLearn, Education's Always in Style! 🎓
+            {t("footer")}
           </p>
         </div>
       </div>

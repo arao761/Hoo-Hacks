@@ -1,6 +1,7 @@
 import React, { useEffect, useState, ReactNode } from "react";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
+import { useI18n } from "@/i18n";
 
 interface LayoutProps {
   children: ReactNode;
@@ -8,8 +9,10 @@ interface LayoutProps {
 
 export interface ChatItem {
   id: string;
-  title: string;
-  timestamp: string;
+  title?: string;
+  titleKey?: string;
+  timestamp?: string;
+  timestampKey?: string;
 }
 
 export const ChatContext = React.createContext<{
@@ -21,33 +24,34 @@ export const ChatContext = React.createContext<{
 } | null>(null);
 
 export const Layout = ({ children }: LayoutProps) => {
+  const { t } = useI18n();
   const [isMobile, setIsMobile] = useState(false);
   const [newChatKey, setNewChatKey] = useState(0);
   const [chats, setChats] = useState<ChatItem[]>([
     {
       id: "1",
-      title: "Spanish Vocabulary Lesson",
-      timestamp: "Today",
+      titleKey: "chatHistory.spanishVocabulary",
+      timestampKey: "chatHistory.today",
     },
     {
       id: "2",
-      title: "Ancient Egypt Documentary",
-      timestamp: "Yesterday",
+      titleKey: "chatHistory.ancientEgypt",
+      timestampKey: "chatHistory.yesterday",
     },
     {
       id: "3",
-      title: "Python Programming Basics",
-      timestamp: "2 days ago",
+      titleKey: "chatHistory.pythonProgramming",
+      timestampKey: "chatHistory.twoDaysAgo",
     },
     {
       id: "4",
-      title: "Renaissance Art History",
-      timestamp: "1 week ago",
+      titleKey: "chatHistory.renaissanceArt",
+      timestampKey: "chatHistory.oneWeekAgo",
     },
     {
       id: "5",
-      title: "Marine Biology Deep Dive",
-      timestamp: "2 weeks ago",
+      titleKey: "chatHistory.marineBiology",
+      timestampKey: "chatHistory.twoWeeksAgo",
     },
   ]);
 
