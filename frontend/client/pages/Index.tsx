@@ -6,7 +6,7 @@ import { ChatContext } from "@/components/Layout";
 import { useI18n } from "@/i18n";
 
 export default function Index() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const SUBJECTS = [
     { id: "math", name: t("subjects.math") },
     { id: "science", name: t("subjects.science") },
@@ -15,7 +15,7 @@ export default function Index() {
     { id: "coding", name: t("subjects.coding") },
   ];
   const [prompt, setPrompt] = useState("");
-  const [selectedType, setSelectedType] = useState<"song" | "image" | "video" | null>(null);
+  const [selectedType, setSelectedType] = useState<"song" | "video" | null>(null);
   const [showOptions, setShowOptions] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -75,7 +75,7 @@ export default function Index() {
       const res = await fetch("/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: prompt, output_type: selectedType }),
+        body: JSON.stringify({ topic: prompt, output_type: selectedType, language: lang }),
       });
       const { job_id } = await res.json();
       navigate(`/result/${job_id}?type=${selectedType}&topic=${encodeURIComponent(prompt)}`);
