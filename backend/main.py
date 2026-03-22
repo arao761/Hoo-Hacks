@@ -62,6 +62,7 @@ async def generate(req: GenerateRequest) -> GenerateResponse:
         "job_id": job_id,
         "topic": req.topic,
         "output_type": req.output_type.value,
+        "language": req.language.value,
     }
 
     # 1) enqueue for worker

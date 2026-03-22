@@ -11,9 +11,19 @@ class OutputType(str, Enum):
     video = "video"
 
 
+class LanguageCode(str, Enum):
+    en = "en"
+    es = "es"
+    zh = "zh"
+    hi = "hi"
+    de = "de"
+    it = "it"
+
+
 class GenerateRequest(BaseModel):
     topic: str = Field(..., min_length=3)
     output_type: OutputType
+    language: LanguageCode = LanguageCode.en
 
 
 class GenerateResponse(BaseModel):

@@ -22,7 +22,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 from models import OutputMetadata, OutputStatus, OutputType
 from redis_client import dequeue_job, save_output_metadata
-from gemini_client import expand_topic_with_gemini
+from gemini_client import expand_topic_with_gemini, localize_prompt_struct
 from infra import upload_media, publish_progress
 
 # Maps output_type string to MIME type for upload_media
@@ -33,6 +33,22 @@ MEDIA_CONTENT_TYPES = {
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("learnlens-worker")
+
+LANGUAGE_NAMES = {
+    "en": "English",
+    "es": "Spanish",
+    "zh": "Chinese",
+    "hi": "Hindi",
+    "de": "German",
+    "it": "Italian",
+}
+
+
+def _normalize_language(language: str | None) -> str:
+    code = (language or "en").strip().lower()
+    if code in LANGUAGE_NAMES:
+        return code
+    return "en"
 
 
 def _generate_placeholder_song_wav(topic: str, duration_seconds: float = 6.0) -> bytes:
@@ -89,16 +105,33 @@ def _generate_colored_placeholder_png(color: str) -> bytes:
             return f.read()
 
 
-def _generate_text_slide_png(title: str, body: str, color: str) -> bytes:
+def _generate_text_slide_png(title: str, body: str, color: str, language: str = "en") -> bytes:
     """Render a readable educational slide using Pillow."""
     from PIL import Image, ImageDraw, ImageFont
 
     def _load_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-        candidates = [
-            "/System/Library/Fonts/Supplemental/Arial.ttf",
-            "/System/Library/Fonts/Supplemental/Helvetica.ttc",
-            "/Library/Fonts/Arial.ttf",
-        ]
+        lang = _normalize_language(language)
+        by_lang = {
+            "zh": [
+                "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+                "/System/Library/Fonts/PingFang.ttc",
+                "/System/Library/Fonts/STHeiti Light.ttc",
+            ],
+            "hi": [
+                "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+                "/System/Library/Fonts/Supplemental/DevanagariMT.ttc",
+                "/System/Library/Fonts/Supplemental/Devanagari Sangam MN.ttc",
+                "/System/Library/Fonts/Supplemental/ITFDevanagari.ttc",
+                "/System/Library/Fonts/Supplemental/NotoSansDevanagari-Regular.ttf",
+            ],
+            "default": [
+                "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+                "/System/Library/Fonts/Supplemental/Arial.ttf",
+                "/System/Library/Fonts/Supplemental/Helvetica.ttc",
+                "/Library/Fonts/Arial.ttf",
+            ],
+        }
+        candidates = by_lang.get(lang, []) + by_lang["default"]
         for path in candidates:
             if os.path.exists(path):
                 try:
@@ -182,7 +215,7 @@ def _build_video_prompt(topic: str, prompt_struct: dict) -> str:
     return "\n".join(parts)
 
 
-def _build_video_narration(topic: str, prompt_struct: dict) -> str:
+def _build_video_narration(topic: str, prompt_struct: dict, language: str = "en") -> str:
     """Build plain narration text for TTS — prefers Gemini's full_narration field."""
     # Prefer the dedicated full_narration field from Gemini
     full_narration = str(prompt_struct.get("full_narration", "")).strip()
@@ -204,11 +237,13 @@ def _build_video_narration(topic: str, prompt_struct: dict) -> str:
     if narration_chunks:
         return f"Today we are learning about {topic}. " + " ".join(narration_chunks)
 
+    language_name = LANGUAGE_NAMES.get(_normalize_language(language), "English")
     return (
         f"Welcome! Today we are learning about {topic}. "
         f"This concept plays an important role and understanding it will help you connect ideas across the subject. "
         f"Let's walk through the key points clearly and build up your knowledge step by step. "
-        f"By the end of this lesson, you'll have a solid grasp of the fundamentals. Let's get started!"
+        f"By the end of this lesson, you'll have a solid grasp of the fundamentals. Let's get started! "
+        f"Narrate entirely in {language_name}."
     )
 
 
@@ -237,11 +272,13 @@ def _build_slideshow_slides(prompt_struct: dict) -> list[tuple[str, str, str]]:
     return slides
 
 
-def _build_song_prompt(topic: str, prompt_struct: dict) -> str:
+def _build_song_prompt(topic: str, prompt_struct: dict, language: str = "en") -> str:
+    language_name = LANGUAGE_NAMES.get(_normalize_language(language), "English")
+
     # Prefer the dedicated music_prompt field from Gemini if present
     music_prompt = str(prompt_struct.get("music_prompt", "")).strip()
     if music_prompt:
-        return music_prompt
+        return f"{music_prompt}\n\nAll lyrics must be in {language_name}."
 
     # Build from individual fields as fallback
     style = str(prompt_struct.get("style", "upbeat educational acoustic-pop")).strip()
@@ -256,10 +293,11 @@ def _build_song_prompt(topic: str, prompt_struct: dict) -> str:
     if lyrics_brief:
         parts.append(f"Content: {lyrics_brief}")
 
+    parts.append(f"All lyrics must be in {language_name}.")
     return " ".join(parts)
 
 
-def _generate_song_audio(topic: str, prompt_struct: dict) -> Tuple[bytes, str, str]:
+def _generate_song_audio(topic: str, prompt_struct: dict, language: str = "en") -> Tuple[bytes, str, str]:
     """
     Generate song audio via Person 3 pipeline when available.
     Falls back to placeholder WAV if provider call fails.
@@ -270,7 +308,7 @@ def _generate_song_audio(topic: str, prompt_struct: dict) -> Tuple[bytes, str, s
         provider = "elevenlabs"
 
     try:
-        prompt = _build_song_prompt(topic, prompt_struct)
+        prompt = _build_song_prompt(topic, prompt_struct, language=language)
 
         # Prefer ElevenLabs direct path so song generation works even when Vertex
         # dependencies are not installed in the backend runtime env.
@@ -291,13 +329,13 @@ def _generate_song_audio(topic: str, prompt_struct: dict) -> Tuple[bytes, str, s
 
 
 
-def _generate_video_media(topic: str, prompt_struct: dict) -> Tuple[bytes, str, str]:
+def _generate_video_media(topic: str, prompt_struct: dict, language: str = "en") -> Tuple[bytes, str, str]:
     provider = (os.getenv("LEARNLENS_VIDEO_PROVIDER", "").strip().lower() or None)
     try:
         from video_generation import generate_learnlens_video
 
         prompt = _build_video_prompt(topic, prompt_struct)
-        narration_text = _build_video_narration(topic, prompt_struct)
+        narration_text = _build_video_narration(topic, prompt_struct, language=language)
 
         # ElevenLabs slideshow requires at least one local image path.
         if provider == "elevenlabs_slideshow":
@@ -307,7 +345,7 @@ def _generate_video_media(topic: str, prompt_struct: dict) -> Tuple[bytes, str, 
                     slide_path = os.path.join(td, f"slide_{i}.png")
                     with open(slide_path, "wb") as f:
                         try:
-                            f.write(_generate_text_slide_png(title, body, color))
+                            f.write(_generate_text_slide_png(title, body, color, language=language))
                         except Exception:
                             # Keep video generation resilient if ffmpeg drawtext is unavailable.
                             f.write(_generate_colored_placeholder_png(color))
@@ -331,6 +369,7 @@ def process_job(job: dict) -> None:
     job_id = job["job_id"]
     topic = job["topic"]
     output_type_str = job["output_type"]
+    language = _normalize_language(job.get("language", "en"))
     output_type = OutputType(output_type_str)
 
     logger.info("Processing job %s - %s (%s)", job_id, topic, output_type_str)
@@ -347,17 +386,22 @@ def process_job(job: dict) -> None:
     try:
         # 1) Prompt expansion via Gemini
         asyncio.run(publish_progress(job_id, "prompted", "Building your prompt..."))
-        prompt_struct = expand_topic_with_gemini(topic, output_type)
+        prompt_struct = expand_topic_with_gemini(topic, output_type, language=language)
+        prompt_struct = localize_prompt_struct(
+            prompt_struct,
+            output_type=output_type,
+            language=language,
+        )
 
         # 2) Call media generation
         asyncio.run(publish_progress(job_id, "generating", f"Generating your {output_type_str}..."))
 
         if output_type is OutputType.song:
-            generated_bytes, content_type, song_provider = _generate_song_audio(topic, prompt_struct)
-            meta.extra = {"prompt": prompt_struct, "song_provider": song_provider}
+            generated_bytes, content_type, song_provider = _generate_song_audio(topic, prompt_struct, language=language)
+            meta.extra = {"prompt": prompt_struct, "song_provider": song_provider, "language": language}
         elif output_type is OutputType.video:
-            generated_bytes, content_type, video_provider = _generate_video_media(topic, prompt_struct)
-            meta.extra = {"prompt": prompt_struct, "video_provider": video_provider}
+            generated_bytes, content_type, video_provider = _generate_video_media(topic, prompt_struct, language=language)
+            meta.extra = {"prompt": prompt_struct, "video_provider": video_provider, "language": language}
         else:
             generated_bytes = str(prompt_struct).encode("utf-8")
             content_type = MEDIA_CONTENT_TYPES.get(output_type_str, "application/octet-stream")
