@@ -34,33 +34,30 @@ _VIDEO_USER = "Topic: {topic}\n\nGenerate a compelling educational video script 
 
 
 def _call_gemini(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
-    """Call Gemini 2.0 Flash via the google-genai SDK and parse the JSON response."""
-    from google import genai
-    from google.genai import types
+    """Call Gemini 2.0 Flash via the REST API directly using httpx."""
+    import httpx
 
-    use_vertex = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "").strip().lower() in ("1", "true", "yes")
-    project = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()
-    location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1").strip()
+    api_key = os.getenv("GEMINI_API_KEY", "").strip() or os.getenv("GOOGLE_API_KEY", "").strip()
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY not set")
 
-    if use_vertex and project:
-        client = genai.Client(vertexai=True, project=project, location=location)
-        model_id = "gemini-2.0-flash"
-    else:
-        api_key = os.getenv("GEMINI_API_KEY", "").strip() or os.getenv("GOOGLE_API_KEY", "").strip()
-        client = genai.Client(api_key=api_key)
-        model_id = "gemini-2.0-flash"
-
-    response = client.models.generate_content(
-        model=model_id,
-        contents=user_prompt,
-        config=types.GenerateContentConfig(
-            system_instruction=system_prompt,
-            temperature=0.7,
-        ),
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"gemini-2.0-flash:generateContent?key={api_key}"
     )
-    raw = response.text.strip()
+    payload = {
+        "system_instruction": {"parts": [{"text": system_prompt}]},
+        "contents": [{"parts": [{"text": user_prompt}]}],
+        "generationConfig": {"temperature": 0.7},
+    }
 
-    # Strip markdown fences if the model wrapped the JSON anyway
+    resp = httpx.post(url, json=payload, timeout=30)
+    resp.raise_for_status()
+    result = resp.json()
+
+    raw = result["candidates"][0]["content"]["parts"][0]["text"].strip()
+
+    # Strip markdown fences if the model wrapped the JSON
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):
